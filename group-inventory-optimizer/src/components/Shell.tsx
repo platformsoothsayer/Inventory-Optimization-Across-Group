@@ -1,0 +1,118 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
+import { useApp } from "@/state/AppState";
+import { GROUP_NAME } from "@/config";
+import { translate } from "@/i18n";
+
+const NAV = [
+  { path: "/", key: "nav.overview" },
+  { path: "/unidades/", key: "nav.units" },
+  { path: "/plan/", key: "nav.plan" },
+  { path: "/como-funciona/", key: "nav.how" },
+] as const;
+
+export function Wordmark({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="flex items-center gap-2 select-none" aria-label="Soothsayer Analytics">
+      <svg width={compact ? 22 : 26} height={compact ? 22 : 26} viewBox="0 0 26 26" aria-hidden>
+        <circle cx="13" cy="13" r="12" fill="none" stroke="#0fa3a3" strokeWidth="2" />
+        <circle cx="13" cy="13" r="5" fill="#0fa3a3" />
+        <circle cx="13" cy="13" r="2" fill="#0b1f3a" />
+      </svg>
+      <span className="leading-none">
+        <span className="font-semibold tracking-wide text-white text-[0.95rem]">Soothsayer</span>{" "}
+        <span className="font-normal tracking-wide text-teal text-[0.95rem]">Analytics</span>
+      </span>
+    </div>
+  );
+}
+
+function Header() {
+  const { t, href, lang, setLang, present } = useApp();
+  const pathname = usePathname() || "/";
+  const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
+  return (
+    <header className="bg-navy text-white shrink-0">
+      <div className="flex items-stretch h-16 px-8 gap-8">
+        <div className="flex items-center gap-5 shrink-0">
+          <Wordmark />
+          <div className="w-px h-8 bg-white/20" />
+          <div className="leading-tight">
+            <div className="text-[1.05rem] font-semibold whitespace-nowrap">{t("app.title")}</div>
+            <div className="text-[0.8rem] text-white/65 whitespace-nowrap">{GROUP_NAME}</div>
+          </div>
+        </div>
+        <nav className="flex items-stretch gap-1 ml-4">
+          {NAV.map((n) => {
+            const active = norm(pathname) === n.path;
+            return (
+              <Link
+                key={n.path}
+                href={href(n.path)}
+                className={`flex items-center px-4 text-[0.95rem] border-b-[3px] transition-colors whitespace-nowrap ${
+                  active ? "border-teal text-white font-semibold" : "border-transparent text-white/70 hover:text-white"
+                }`}
+              >
+                {t(n.key)}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center rounded border border-white/25 overflow-hidden text-[0.8rem] font-semibold" role="group" aria-label={t("lang.switch")}>
+            {(["es", "en"] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`px-2.5 py-1 ${lang === l ? "bg-teal text-navy" : "text-white/75 hover:text-white"}`}
+                aria-pressed={lang === l}
+              >
+                {t(l === "es" ? "lang.es" : "lang.en")}
+              </button>
+            ))}
+          </div>
+          {!present && <div className="w-px h-6 bg-white/15 hidden min-[1500px]:block" />}
+          {!present && <span className="text-[0.75rem] text-white/60 whitespace-nowrap hidden min-[1500px]:inline">{t("app.currencyNote")}</span>}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Footer() {
+  const { t, f, world } = useApp();
+  return (
+    <footer className="shrink-0 border-t border-line bg-white px-8 h-8 flex items-center justify-between text-[0.75rem] text-muted">
+      <span>{t("app.footer")}</span>
+      <span className="tnum">{t("app.asOf", { date: f.date(world.today) })}</span>
+    </footer>
+  );
+}
+
+export function Shell({ children }: { children: ReactNode }) {
+  const { present, lang } = useApp();
+  useEffect(() => {
+    document.documentElement.classList.toggle("present", present);
+    document.documentElement.lang = lang === "es" ? "es-MX" : "en";
+  }, [present, lang]);
+  return (
+    <div className={present ? "w-[1600px] h-[900px] overflow-hidden flex flex-col bg-bg" : "min-h-screen min-w-[1280px] flex flex-col bg-bg"}>
+      <Header />
+      <main className="flex-1 min-h-0 flex flex-col">{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
+export function LoadingShell() {
+  return (
+    <div className="min-h-screen flex flex-col bg-bg">
+      <header className="bg-navy h-16 px-8 flex items-center">
+        <Wordmark />
+      </header>
+      <div className="flex-1 flex items-center justify-center text-muted">{translate("es", "app.loading")}</div>
+    </div>
+  );
+}

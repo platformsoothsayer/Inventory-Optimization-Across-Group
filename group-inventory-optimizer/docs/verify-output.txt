@@ -1,0 +1,72 @@
+
+> group-inventory-optimizer@0.1.0 verify
+> tsx scripts/verify.ts
+
+
+1. Determinism
+  PASS  same seed gives identical JSON  (a9fa0807af3ffc5e)
+  PASS  committed data matches generator output
+
+2. Synthetic world shape
+  PASS  inventory size 900 to 1,100  (1081 units)
+  PASS  15 to 20 percent over 90 days  (17.9%)
+  PASS  every unit sits at a dealership holding its brand
+
+3. Constraints
+  PASS  same-brand franchise rule on every transfer  (40 transfers)
+  PASS  weekly transfer capacity  (40 of 40)
+  PASS  inbound lot capacity per dealership  ({"SFE":8,"TOL":8,"ECA":4,"POL":5,"PAC":1,"SAT":5,"LEO":1,"PUE":5,"COY":2,"QRO":1})
+  PASS  minimum display stock (no dealership loses its last unit of a model)
+  PASS  max discount respected  (104 price actions)
+  PASS  one action per unit at most
+  PASS  every action clears the minimum improvement threshold
+  PASS  constraints hold under tighter assumptions
+
+4. KPI consistency
+  PASS  units KPI equals unit count and store sums  (1081)
+  PASS  inventory value equals sum of unit costs and store sums  (615,156,000)
+  PASS  avg days equals mean unit age  (53.0)
+  PASS  over-90 count equals units over 90 and store bucket sums  (193)
+  PASS  monthly plan piso equals sum of unit costs x rate / 12
+  PASS  optimizer accumulated improvement equals full scenario EV gain  (3,271,654 vs 3,271,654)
+  PASS  no approvals: approved deltas are zero
+  PASS  approve all: savings move by exactly the plan delta  (235,365 MXN/month)
+  PASS  approve all: capital freed moves by exactly the plan delta  (32,495,465)
+  PASS  approve a subset: KPIs move by exactly that subset's computed deltas  (48 actions)
+  PASS  route totals equal transfer count
+
+5. Planted stories
+  PASS  story 1: Nordhaus N5 in Toluca goes to Polanco  (speed x3.1, +86,838)
+  PASS  story 1: sells about 3x faster in Polanco  (3.13)
+  PASS  story 2: all five KX5 base white units leave Polanco  (ECA,PAC,ECA,PUE,ECA)
+  PASS  story 2: spread over at least 2 destinations  (ECA,PAC,PUE)
+  PASS  story 2: destinations are value and regional dealerships
+  PASS  story 3: Zhenlong Z7 at Coyoacán has few months of history  (4 months live, 1 in backtest)
+  PASS  story 3: pooled estimate closer to held-out actual than raw  (raw 5.6, pooled 8.9, actual 11.9)
+  PASS  story 4: Vantor Summit in León gets a discount, not a transfer  (4%)
+  PASS  story 4: discount is about 4 percent
+  PASS  story 4: no transfer pays off (transfer cost exceeds the gain)  (best transfer QRO -1,074, cost 7,083)
+  PASS  story 5: Kaido KX3 in Satélite is kept  (best alternative -1,551)
+  PASS  story 5: season ahead raises demand  (+10%)
+  PASS  story 6: Solenne Grand in Querétaro goes to Santa Fe
+  PASS  story 6: every option loses money and Santa Fe loses least  (SFE -16,586, keep -81,252)
+
+6. Model sanity
+        backtest WAPE model 26.6%, naive 29.9%
+  PASS  backtest runs on held-out months 22 to 24
+  PASS  probabilities are within [0, 1]
+  PASS  discount raises sale probability
+
+7. Performance
+  PASS  optimizer under 300 ms on full inventory  (median 54 ms, best 50 ms, 1081 units)
+
+8. Dictionaries and copy
+  PASS  both dictionaries have identical keys  (271 keys)
+  PASS  no empty dictionary values
+  PASS  no em dashes, en dashes or semicolons in dictionary values
+  PASS  no hype words in copy
+
+9. Forbidden strings
+  PASS  forbidden name absent from source and build output  (src, scripts, out scanned)
+
+47 passed, 0 failed
