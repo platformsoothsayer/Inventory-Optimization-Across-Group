@@ -10,6 +10,7 @@ import { evaluateScenario, type ScenarioResult } from "@/lib/scenario";
 import { computeKpis, type PanoramaKpis } from "@/lib/kpis";
 import { runBacktest, type BacktestResult } from "@/lib/backtest";
 import { buildGroups } from "@/lib/explain";
+import { project, type ProjectionPoint } from "@/lib/projection";
 import { translate, type DictKey, type Lang } from "@/i18n";
 import { makeFormat, type Fmt } from "@/lib/format";
 
@@ -66,6 +67,7 @@ export interface AppValue {
   units: Unit[];
   engine: Engine;
   base: ScenarioResult;
+  proj: { base: ProjectionPoint[]; plan: ProjectionPoint[] };
   groups: ReturnType<typeof buildGroups>;
   actionByUnit: Map<string, PlanAction>;
   statusOf: (actionId: string) => ActionStatus;
@@ -126,6 +128,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const groups = useMemo(() => buildGroups(units), []);
   const engine = useMemo(() => runEngine(world, units, dm, debounced), [dm, debounced]);
   const base = useMemo(() => evaluateScenario(engine.ctx, units, []), [engine]);
+  const proj = useMemo(() => {
+    const planScenario = evaluateScenario(engine.ctx, units, engine.result.actions);
+    return {
+      base: project(engine.ctx.curves, units, base, debounced.floorplanRate),
+      plan: project(engine.ctx.curves, units, planScenario, debounced.floorplanRate),
+    };
+  }, [engine, base, debounced.floorplanRate]);
   const actionByUnit = useMemo(() => new Map(engine.result.actions.map((a) => [a.unitId, a])), [engine]);
   const approvedSet = useMemo(() => new Set(state.approved), [state.approved]);
   const rejectedSet = useMemo(() => new Set(state.rejected), [state.rejected]);
@@ -181,6 +190,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     units,
     engine,
     base,
+    proj,
     groups,
     actionByUnit,
     statusOf: (id) => (approvedSet.has(id) ? "approved" : rejectedSet.has(id) ? "rejected" : "proposed"),

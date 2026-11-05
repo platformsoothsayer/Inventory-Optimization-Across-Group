@@ -27,9 +27,9 @@ export function AssumptionRail() {
   const keys = Object.keys(ranges) as Key[];
   const segs: Segment[] = ["volume", "newEntrant", "premium", "luxury"];
   return (
-    <aside className="w-[19rem] shrink-0 border-r border-line bg-white px-5 py-4 overflow-y-auto scroll-thin">
+    <aside className="w-[19rem] shrink-0 border-r border-line bg-surface shadow-[2px_0_12px_rgb(11_31_58/0.04)] px-5 py-4 overflow-y-auto scroll-thin">
       <div className="flex items-center justify-between">
-        <h2 className="text-[1rem] font-semibold text-ink">{t("plan.assumptions")}</h2>
+        <h2 className="text-[1rem] font-semibold text-navy">{t("plan.assumptions")}</h2>
         <Button small variant="secondary" onClick={() => dispatch({ type: "reset" })}>
           {t("btn.reset")}
         </Button>
@@ -43,8 +43,8 @@ export function AssumptionRail() {
           return (
             <label key={k} className="py-2.5 block">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[0.88rem] text-ink">{t(`asm.${k}`)}</span>
-                <span className={`text-[0.9rem] font-semibold tnum ${changed ? "text-teal-ink" : "text-ink"}`}>{fmt[k](v)}</span>
+                <span className="text-[0.88rem] text-navy">{t(`asm.${k}`)}</span>
+                <span className={`text-[0.9rem] font-semibold tnum ${changed ? "text-deep-teal" : "text-navy"}`}>{fmt[k](v)}</span>
               </div>
               <input
                 type="range"
@@ -53,14 +53,14 @@ export function AssumptionRail() {
                 step={step}
                 value={v}
                 onChange={(e) => dispatch({ type: "setAssumption", key: k, value: Number(e.target.value) })}
-                className="w-full accent-[#0fa3a3] mt-1"
+                className="w-full accent-teal mt-1"
               />
               <div className="text-[0.75rem] text-faint tnum">{t("plan.default", { value: fmt[k](DEFAULT_ASSUMPTIONS[k]) })}</div>
             </label>
           );
         })}
         <div className="py-2.5">
-          <div className="text-[0.88rem] text-ink">{t("asm.elasticity")}</div>
+          <div className="text-[0.88rem] text-navy">{t("asm.elasticity")}</div>
           {segs.map((s) => {
             const v = assumptions.elasticity[s];
             const changed = v !== DEFAULT_ASSUMPTIONS.elasticity[s];
@@ -68,9 +68,9 @@ export function AssumptionRail() {
               <label key={s} className="block mt-2">
                 <div className="flex items-baseline justify-between">
                   <span className="text-[0.82rem] text-muted">{t(`seg.${s}`)}</span>
-                  <span className={`text-[0.85rem] font-semibold tnum ${changed ? "text-teal-ink" : "text-ink"}`}>{v}</span>
+                  <span className={`text-[0.85rem] font-semibold tnum ${changed ? "text-deep-teal" : "text-navy"}`}>{v}</span>
                 </div>
-                <input type="range" min={0} max={40} step={1} value={v} onChange={(e) => dispatch({ type: "setElasticity", segment: s, value: Number(e.target.value) })} className="w-full accent-[#0fa3a3]" />
+                <input type="range" min={0} max={40} step={1} value={v} onChange={(e) => dispatch({ type: "setElasticity", segment: s, value: Number(e.target.value) })} className="w-full accent-teal" />
                 <div className="text-[0.75rem] text-faint tnum">
                   {t("asm.elasticityNote", { pct: f.pct(Math.exp(v * 0.01) - 1) })}. {t("plan.default", { value: DEFAULT_ASSUMPTIONS.elasticity[s] })}
                 </div>

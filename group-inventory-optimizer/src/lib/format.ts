@@ -23,6 +23,7 @@ export function makeFormat(lang: Lang) {
     dec1: (x: number) => nf(lang, "dec1", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(x),
     pct: (x: number) => nf(lang, "pct", { style: "percent", maximumFractionDigits: 0 }).format(x),
     pct1: (x: number) => nf(lang, "pct1", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(x),
+    pct1Signed: (x: number) => nf(lang, "pct1Signed", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: "exceptZero" }).format(x),
     pctSigned: (x: number) => nf(lang, "pctSigned", { style: "percent", maximumFractionDigits: 0, signDisplay: "exceptZero" }).format(x),
     date: (iso: string) =>
       new Intl.DateTimeFormat(locale(lang), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`)),

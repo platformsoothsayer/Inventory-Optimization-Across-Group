@@ -15,6 +15,7 @@ import { buildGroups, explainUnit } from "../src/lib/explain";
 import { runBacktest } from "../src/lib/backtest";
 import { optimize } from "../src/lib/optimizer";
 import { buildContext } from "../src/lib/economics";
+import { contrastResults } from "./contrast";
 
 const root = join(__dirname, "..");
 let failures = 0;
@@ -221,6 +222,23 @@ console.log("\n9. Forbidden strings");
   const self = "scripts/verify.ts";
   const real = hits.filter((h) => h !== self);
   check("forbidden name absent from source and build output", real.length === 0, real.join(", ") || (existsSync(join(root, "out")) ? "src, scripts, out scanned" : "src, scripts scanned (no build yet)"));
+}
+
+console.log("\n10. Design tokens and contrast");
+{
+  const res = contrastResults();
+  for (const r of res) check(`WCAG AA ${r.large ? "large " : ""}text: ${r.label}`, r.ok, `${r.ratio.toFixed(2)} : 1, need ${r.need}`);
+  const hex = /#[0-9a-fA-F]{6}\b/;
+  const offenders: string[] = [];
+  const walk = (dir: string) => {
+    for (const f of readdirSync(dir)) {
+      const p = join(dir, f);
+      if (statSync(p).isDirectory()) walk(p);
+      else if ([".ts", ".tsx", ".css"].includes(extname(f)) && !p.endsWith(join("theme", "tokens.ts")) && hex.test(readFileSync(p, "utf8"))) offenders.push(p.replace(root + "/", ""));
+    }
+  };
+  walk(join(root, "src"));
+  check("all colors come from src/theme/tokens.ts", offenders.length === 0, offenders.join(", "));
 }
 
 console.log(`\n${passes} passed, ${failures} failed`);

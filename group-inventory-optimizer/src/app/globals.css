@@ -1,23 +1,32 @@
 @import "tailwindcss";
 
-@theme {
-  --color-navy: #0b1f3a;
-  --color-navy-2: #16315a;
-  --color-navy-3: #2a4a78;
-  --color-teal: #0fa3a3;
-  --color-teal-ink: #0a7676;
-  --color-teal-soft: #e2f3f3;
-  --color-ink: #16202b;
-  --color-muted: #586777;
-  --color-faint: #8794a3;
-  --color-line: #dde3ea;
-  --color-line-2: #eef1f5;
-  --color-bg: #f5f7fa;
-  --color-neg: #8a97a6;
-  --color-a0: #e3d8bd;
-  --color-a1: #e2b064;
-  --color-a2: #cf7432;
-  --color-a3: #a33a25;
+/* Colors come only from src/theme/tokens.ts (CSS variables injected in layout.tsx). */
+@theme inline {
+  --color-navy: var(--c-navy);
+  --color-ink: var(--c-navy);
+  --color-deep-teal: var(--c-deep-teal);
+  --color-teal-ink: var(--c-deep-teal);
+  --color-teal: var(--c-teal);
+  --color-teal-soft: var(--c-teal-soft);
+  --color-royal: var(--c-royal);
+  --color-indigo: var(--c-indigo);
+  --color-amber: var(--c-amber);
+  --color-amber-soft: var(--c-amber-soft);
+  --color-coral: var(--c-coral);
+  --color-coral-soft: var(--c-coral-soft);
+  --color-green: var(--c-green);
+  --color-green-soft: var(--c-green-soft);
+  --color-gold: var(--c-gold);
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-line: var(--c-divider);
+  --color-line-2: var(--c-divider-soft);
+  --color-muted: var(--c-secondary);
+  --color-faint: var(--c-secondary);
+  --color-a0: var(--c-a0);
+  --color-a1: var(--c-a1);
+  --color-a2: var(--c-a2);
+  --color-a3: var(--c-a3);
   --font-sans: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
 }
 
@@ -28,8 +37,8 @@ html.present {
   font-size: 18.4px; /* about 15 percent larger for screenshots */
 }
 body {
-  background: #f5f7fa;
-  color: #16202b;
+  background: var(--c-bg);
+  color: var(--c-navy);
   font-family: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -38,14 +47,22 @@ body {
 }
 .kpi-value {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+}
+.panel {
+  background: var(--c-surface);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgb(11 31 58 / 0.05), 0 6px 20px -8px rgb(11 31 58 / 0.12);
+}
+.header-gradient {
+  background: linear-gradient(100deg, var(--c-navy) 0%, var(--c-navy) 55%, color-mix(in srgb, var(--c-navy) 72%, var(--c-deep-teal)) 100%);
 }
 .scroll-thin::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: #cfd7e0;
+  background: var(--c-divider);
   border-radius: 4px;
 }
 .recharts-text {
@@ -53,4 +70,48 @@ body {
 }
 .recharts-cartesian-axis-tick-value {
   font-variant-numeric: tabular-nums;
+}
+
+/* Gentle load animations, normal mode only. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.anim-rise {
+  animation: rise 0.45s ease-out both;
+}
+.anim-grow {
+  transform-origin: left center;
+  animation: grow-x 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.anim-fade {
+  animation: fade 0.7s ease-out both;
+}
+html.present *,
+html.present *::before,
+html.present *::after {
+  animation: none !important;
+  transition: none !important;
 }

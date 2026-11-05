@@ -32,11 +32,9 @@
   "overview.approvedLine": "Aprobadas: {n} acciones.",
   "overview.mapTitle": "Red de agencias y traspasos recomendados",
   "overview.mapNote": "Posiciones aproximadas. La zona metropolitana se muestra ampliada.",
-  "overview.legendSize": "Tamaño: unidades en inventario",
-  "overview.legendRing": "Anillo: % con más de 90 días",
+  "overview.legendSize": "Tamaño: unidades",
   "overview.legendProposed": "Traspaso propuesto",
   "overview.legendApproved": "Traspaso aprobado",
-  "overview.legendWidth": "Grosor: unidades",
   "overview.agingTitle": "Antigüedad por agencia",
   "overview.agingSub": "Ordenadas por unidades con más de 90 días. Total a la derecha.",
   "overview.nodeOver90": "{pct} con +90 días",
@@ -269,5 +267,11 @@
   "tier.suburbanValue": "Suburbana de valor",
   "tier.regional": "Regional",
   "tier.regionalGrowth": "Regional en crecimiento",
-  "tier.regionalValue": "Regional de valor"
+  "tier.regionalValue": "Regional de valor",
+  "kpi.trendNote": "Línea: proyección a 90 días con el plan. Punteada: sin actuar. Variación a 90 días frente a no actuar.",
+  "overview.legendRingMix": "Anillo: mezcla de antigüedad",
+  "overview.legendFill": "Relleno: marca principal",
+  "detail.labelKeep": "{store} (hoy)",
+  "detail.labelDiscount": "Descuento {pct}",
+  "plan.trendNote": "Línea: proyección a 90 días o mejora acumulada por acción. Variación frente a no actuar."
 }

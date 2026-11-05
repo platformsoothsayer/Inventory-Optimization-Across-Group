@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { useApp } from "@/state/AppState";
 import { bucketOf } from "@/lib/kpis";
-import { Badge } from "./ui";
+import { Badge, BrandDot } from "./ui";
+import { palette } from "@/theme/tokens";
 import { actionLabel, configLabel, riskOf } from "./labels";
 
 type SortKey = "unit" | "store" | "config" | "days" | "p60" | "risk" | "floorplan" | "action" | "improvement";
@@ -99,7 +100,7 @@ export function UnitsTable({ pageSize }: { pageSize: number }) {
           set(e.target.value);
           setPage(0);
         }}
-        className="border border-line rounded bg-white px-2 py-1 text-[0.85rem] text-ink"
+        className="rounded-md bg-surface ring-1 ring-line px-2 py-1 text-[0.85rem] text-navy shadow-[0_1px_2px_rgb(11_31_58/0.05)]"
       >
         <option value="all">{t("filter.all")}</option>
         {opts.map((o) => (
@@ -124,9 +125,9 @@ export function UnitsTable({ pageSize }: { pageSize: number }) {
         ])}
         <span className="ml-auto text-[0.85rem] text-muted tnum">{t("units.count", { n: f.int(filtered.length) })}</span>
       </div>
-      <div className="bg-white border border-line rounded-sm overflow-hidden">
+      <div className="panel overflow-hidden anim-rise">
         <table className="w-full text-[0.85rem] tnum">
-          <thead className="border-b border-line bg-[#fafbfc]">
+          <thead className="border-b border-line bg-bg/60">
             <tr>
               {head("unit", t("col.unit"))}
               {head("store", t("col.store"))}
@@ -148,24 +149,24 @@ export function UnitsTable({ pageSize }: { pageSize: number }) {
                 <tr
                   key={r.u.id}
                   onClick={() => setSelectedUnit(r.u.id)}
-                  className={`border-b border-line-2 last:border-0 cursor-pointer ${sel ? "bg-teal-soft" : "hover:bg-[#f6f9fb]"}`}
+                  className={`border-b border-line-2 last:border-0 cursor-pointer ${sel ? "bg-teal-soft" : "hover:bg-bg"}`}
                 >
                   <td className="px-3 py-[0.45rem] font-mono text-[0.8rem] text-muted">{r.u.id.slice(-8)}</td>
                   <td className="px-3 py-[0.45rem] whitespace-nowrap">{storeName(r.u.store)}</td>
-                  <td className="px-3 py-[0.45rem] whitespace-nowrap">{r.config}</td>
+                  <td className="px-3 py-[0.45rem] whitespace-nowrap"><span className="inline-flex items-center gap-2"><BrandDot brand={r.u.brand} />{r.config}</span></td>
                   <td className="px-3 py-[0.45rem] text-right">
-                    <span className={r.u.age > 90 ? "font-semibold text-[#8a2f1e]" : ""}>{r.u.age}</span>
+                    <span className={r.u.age > 90 ? "font-semibold" : ""} style={r.u.age > 90 ? { boxShadow: `inset 0 -2px 0 ${palette.coral}` } : undefined}>{r.u.age}</span>
                   </td>
                   <td className="px-3 py-[0.45rem] text-right">{f.pct(r.p60)}</td>
                   <td className="px-3 py-[0.45rem]">
-                    <Badge tone={r.risk === "high" ? "a3" : r.risk === "medium" ? "a2" : "a0"}>{t(`risk.${r.risk}`)}</Badge>
+                    <Badge tone={r.risk === "high" ? "a3" : r.risk === "medium" ? "a2" : "a0"} icon={<span aria-hidden>{r.risk === "high" ? "▲" : r.risk === "medium" ? "●" : "▼"}</span>}>{t(`risk.${r.risk}`)}</Badge>
                   </td>
                   <td className="px-3 py-[0.45rem] text-right">{f.money(r.floorplan)}</td>
                   <td className="px-3 py-[0.45rem] whitespace-nowrap">
-                    {r.action ? <span className="text-teal-ink font-medium">{actionLabel(app, r.action)}</span> : <span className="text-muted">{t("action.keep")}</span>}
+                    {r.action ? <span className="text-deep-teal font-medium inline-flex items-center gap-1.5"><span aria-hidden>{r.action.type === "transfer" ? "⇄" : "%"}</span>{actionLabel(app, r.action)}</span> : <span className="text-muted">{t("action.keep")}</span>}
                   </td>
-                  <td className="px-3 py-[0.45rem] text-right">{r.improvement > 0 ? f.money(r.improvement) : <span className="text-faint">0</span>}</td>
-                  <td className="px-3 py-[0.45rem]">{st && <Badge tone={st === "approved" ? "approved" : st === "rejected" ? "rejected" : "neutral"}>{t(`status.${st}`)}</Badge>}</td>
+                  <td className="px-3 py-[0.45rem] text-right">{r.improvement > 0 ? <span className="font-medium">+{f.money(r.improvement)}</span> : <span className="text-muted">0</span>}</td>
+                  <td className="px-3 py-[0.45rem]">{st && <Badge tone={st === "approved" ? "approved" : st === "rejected" ? "rejected" : "proposed"}>{t(`status.${st}`)}</Badge>}</td>
                 </tr>
               );
             })}

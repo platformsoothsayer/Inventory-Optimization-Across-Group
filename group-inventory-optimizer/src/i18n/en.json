@@ -32,11 +32,9 @@
   "overview.approvedLine": "Approved: {n} actions.",
   "overview.mapTitle": "Dealership network and recommended transfers",
   "overview.mapNote": "Approximate positions. The metro area is shown enlarged.",
-  "overview.legendSize": "Size: units in stock",
-  "overview.legendRing": "Ring: share over 90 days",
+  "overview.legendSize": "Size: units",
   "overview.legendProposed": "Proposed transfer",
   "overview.legendApproved": "Approved transfer",
-  "overview.legendWidth": "Width: units",
   "overview.agingTitle": "Aging by dealership",
   "overview.agingSub": "Sorted by units over 90 days. Total on the right.",
   "overview.nodeOver90": "{pct} over 90 days",
@@ -269,5 +267,11 @@
   "tier.suburbanValue": "Suburban value",
   "tier.regional": "Regional",
   "tier.regionalGrowth": "Regional growth",
-  "tier.regionalValue": "Regional value"
+  "tier.regionalValue": "Regional value",
+  "kpi.trendNote": "Line: 90-day projection with the plan. Dotted: no action. Change at day 90 versus not acting.",
+  "overview.legendRingMix": "Ring: aging mix",
+  "overview.legendFill": "Fill: main brand",
+  "detail.labelKeep": "{store} (now)",
+  "detail.labelDiscount": "{pct} discount",
+  "plan.trendNote": "Line: 90-day projection or cumulative gain by action. Change versus not acting."
 }

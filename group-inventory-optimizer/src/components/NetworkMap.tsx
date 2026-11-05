@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "@/state/AppState";
-import { agingColorForShare, AGING_COLORS } from "./ui";
+import { BrandDot } from "./ui";
+import { agingRamp, brandColor, palette, tint } from "@/theme/tokens";
 
 const VB_W = 1000;
 const CENTER = { lat: 19.43, lng: -99.17 };
@@ -25,7 +26,7 @@ interface RouteArc {
 }
 
 export function NetworkMap({ height }: { height?: number }) {
-  const { world, kpis, engine, statusOf, t, f, storeName, brandName } = useApp();
+  const { world, kpis, engine, statusOf, t, f, storeName, brandName, units } = useApp();
   const [hover, setHover] = useState<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [VB_H, setVbH] = useState(560);
@@ -48,7 +49,7 @@ export function NetworkMap({ height }: { height?: number }) {
     });
     const xs = raw.map((p) => p.x);
     const ys = raw.map((p) => p.y);
-    const pad = { l: 90, r: 130, t: 105, b: 62 };
+    const pad = { l: 90, r: 140, t: 100, b: 74 };
     const sx = (VB_W - pad.l - pad.r) / (Math.max(...xs) - Math.min(...xs));
     const sy = (VB_H - pad.t - pad.b) / (Math.max(...ys) - Math.min(...ys));
     // Stylized: allow a mild horizontal stretch so the network fills a wide panel.
@@ -67,7 +68,7 @@ export function NetworkMap({ height }: { height?: number }) {
   }, [world, VB_H]);
 
   const maxUnits = Math.max(...kpis.stores.map((s) => s.units));
-  const radius = (n: number) => Math.round((11 + 19 * Math.sqrt(n / maxUnits)) * 10) / 10;
+  const radius = (n: number) => Math.round((10 + 16 * Math.sqrt(n / maxUnits)) * 10) / 10;
 
   const arcs = useMemo(() => {
     const m = new Map<string, RouteArc>();
@@ -121,50 +122,94 @@ export function NetworkMap({ height }: { height?: number }) {
   // Label placement: right of the node unless near the right edge or crowded.
   const labelSide: Record<string, "r" | "l" | "b" | "t"> = { POL: "r", SFE: "b", COY: "r", SAT: "l", ECA: "r", TOL: "b", PUE: "b", QRO: "r", PAC: "r", LEO: "b" };
 
+  // Main brand per dealership (most units in stock) tints the node fill.
+  const mainBrand = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const st of world.stores) {
+      const counts: Record<string, number> = {};
+      for (const u of units) if (u.store === st.id) counts[u.brand] = (counts[u.brand] ?? 0) + 1;
+      out[st.id] = Object.entries(counts).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? st.brands[0];
+    }
+    return out;
+  }, [world, units]);
+
+  const hull = useMemo(() => {
+    const pts = Object.values(layout.pos).map((p) => [p.x, p.y] as [number, number]);
+    return convexHull(pts);
+  }, [layout]);
+
   return (
     <div ref={boxRef} className="relative w-full h-full" style={height ? { height } : undefined}>
       <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet" role="img" aria-label={t("overview.mapTitle")}>
         <defs>
-          <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0fa3a3" />
+          <pattern id="dotgrid" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1.5" cy="1.5" r="1.1" fill={palette.divider} />
+          </pattern>
+          <radialGradient id="metroGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor={tint(palette.teal, 0.1)} />
+            <stop offset="1" stopColor={tint(palette.teal, 0.03)} />
+          </radialGradient>
+          <marker id="arrowP" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={palette.amber} />
           </marker>
-          <marker id="arrowA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a7676" />
+          <marker id="arrowA" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={palette.teal} />
           </marker>
+          <filter id="nodeShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="2.2" floodColor={palette.navy} floodOpacity="0.16" />
+          </filter>
         </defs>
-        <circle cx={layout.metro.x} cy={layout.metro.y} r={layout.metro.r} fill="#eef3f7" stroke="#d3dce6" strokeDasharray="3 4" />
-        <text x={layout.metro.x} y={layout.metro.y - layout.metro.r - 8} textAnchor="middle" fontSize="14" fill="#8794a3">
+        <rect x="0" y="0" width={VB_W} height={VB_H} fill="url(#dotgrid)" />
+        {hull.length > 2 && (
+          <polygon
+            points={hull.map((p) => p.join(",")).join(" ")}
+            fill={tint(palette.royal, 0.04)}
+            stroke={tint(palette.royal, 0.16)}
+            strokeWidth={110}
+            strokeLinejoin="round"
+            strokeOpacity={0.35}
+          />
+        )}
+        <circle cx={layout.metro.x} cy={layout.metro.y} r={layout.metro.r} fill="url(#metroGlow)" stroke={tint(palette.teal, 0.35)} strokeDasharray="3 5" />
+        <text x={layout.metro.x} y={layout.metro.y - layout.metro.r - 8} textAnchor="middle" fontSize="14" fill={palette.secondary} letterSpacing="0.04em">
           {t("overview.metro")}
         </text>
-        {arcs.map((a) => (
-          <g key={`${a.from}-${a.to}`}>
-            {a.proposed > 0 && (
-              <path d={arcPath(a, 0.18)} fill="none" stroke="#0fa3a3" strokeOpacity={0.8} strokeWidth={width(a.proposed)} strokeDasharray="6 5" strokeLinecap="round" markerEnd="url(#arrow)" />
-            )}
-            {a.approved > 0 && (
-              <path d={arcPath(a, a.proposed > 0 ? 0.3 : 0.18)} fill="none" stroke="#0a7676" strokeWidth={width(a.approved)} strokeLinecap="round" markerEnd="url(#arrowA)" />
-            )}
-          </g>
-        ))}
+        <g className="anim-fade" style={{ animationDelay: "250ms" }}>
+          {arcs.map((a) => (
+            <g key={`${a.from}-${a.to}`}>
+              {a.proposed > 0 && (
+                <path d={arcPath(a, 0.18)} fill="none" stroke={palette.amber} strokeWidth={width(a.proposed)} strokeDasharray="7 5" strokeLinecap="round" markerEnd="url(#arrowP)" />
+              )}
+              {a.approved > 0 && (
+                <path d={arcPath(a, a.proposed > 0 ? 0.3 : 0.18)} fill="none" stroke={palette.teal} strokeWidth={width(a.approved)} strokeLinecap="round" markerEnd="url(#arrowA)" />
+              )}
+            </g>
+          ))}
+        </g>
         {world.stores.map((s) => {
           const p = layout.pos[s.id];
           const st = statsBy[s.id];
           const r = radius(st.units);
           const side = labelSide[s.id] ?? "r";
-          const lx = side === "r" ? p.x + r + 10 : side === "l" ? p.x - r - 10 : p.x;
-          const ly = side === "b" ? p.y + r + 20 : side === "t" ? p.y - r - 26 : p.y - 2;
+          const ring = r + 5;
+          const lx = side === "r" ? p.x + ring + 9 : side === "l" ? p.x - ring - 9 : p.x;
+          const ly = side === "b" ? p.y + ring + 19 : side === "t" ? p.y - ring - 26 : p.y - 2;
           const anchor = side === "r" ? "start" : side === "l" ? "end" : "middle";
+          const brandC = brandColor[mainBrand[s.id]];
           return (
             <g key={s.id} onMouseEnter={() => setHover(s.id)} onMouseLeave={() => setHover(null)} style={{ cursor: "default" }}>
-              <circle cx={p.x} cy={p.y} r={r} fill="#ffffff" stroke={agingColorForShare(st.over90Share)} strokeWidth={7} />
-              <circle cx={p.x} cy={p.y} r={r + 4.5} fill="none" stroke={hover === s.id ? "#0b1f3a" : "transparent"} strokeWidth={1.5} />
-              <text x={p.x} y={p.y + 5} textAnchor="middle" fontSize="16" fontWeight={600} fill="#16202b" className="tnum">
+              <circle cx={p.x} cy={p.y} r={ring + 4} fill={palette.surface} filter="url(#nodeShadow)" />
+              <Donut cx={p.x} cy={p.y} r={ring} width={7.5} values={st.buckets} colors={agingRamp as unknown as string[]} />
+              <circle cx={p.x} cy={p.y} r={r - 0.5} fill={tint(brandC, 0.2)} />
+              <circle cx={p.x} cy={p.y} r={r - 0.5} fill="none" stroke={tint(brandC, 0.55)} strokeWidth={1.2} />
+              {hover === s.id && <circle cx={p.x} cy={p.y} r={ring + 7} fill="none" stroke={palette.navy} strokeWidth={1.5} />}
+              <text x={p.x} y={p.y + 5.5} textAnchor="middle" fontSize="16" fontWeight={700} fill={palette.navy} className="tnum">
                 {st.units}
               </text>
-              <text x={lx} y={ly} textAnchor={anchor} fontSize="17" fontWeight={600} fill="#16202b" stroke="#ffffff" strokeWidth={4} paintOrder="stroke">
+              <text x={lx} y={ly} textAnchor={anchor} fontSize="17" fontWeight={600} fill={palette.navy} stroke={palette.surface} strokeWidth={4} paintOrder="stroke">
                 {storeName(s.id)}
               </text>
-              <text x={lx} y={ly + 18} textAnchor={anchor} fontSize="14" fill="#586777" className="tnum" stroke="#ffffff" strokeWidth={4} paintOrder="stroke">
+              <text x={lx} y={ly + 18} textAnchor={anchor} fontSize="14" fill={palette.secondary} className="tnum" stroke={palette.surface} strokeWidth={4} paintOrder="stroke">
                 {t("overview.nodeOver90", { pct: f.pct(st.over90Share) })}
               </text>
             </g>
@@ -173,10 +218,10 @@ export function NetworkMap({ height }: { height?: number }) {
       </svg>
       {hovered && hs && (
         <div
-          className="absolute pointer-events-none bg-white border border-line shadow-md rounded px-3 py-2 text-[0.82rem] min-w-[220px] z-10"
+          className="absolute pointer-events-none panel px-3 py-2 text-[0.82rem] min-w-[230px] z-10"
           style={{ left: `${(layout.pos[hs.id].x / VB_W) * 100}%`, top: `${(layout.pos[hs.id].y / VB_H) * 100}%`, transform: "translate(-50%, calc(-100% - 40px))" }}
         >
-          <div className="font-semibold text-ink text-[0.9rem]">
+          <div className="font-semibold text-navy text-[0.9rem]">
             {hs.name} <span className="font-normal text-muted">{hs.region}</span>
           </div>
           <div className="text-muted mb-1">{t(`tier.${hs.tier}`)}</div>
@@ -185,11 +230,52 @@ export function NetworkMap({ height }: { height?: number }) {
           <div className="tnum">{t("tooltip.avgDays", { n: f.int(hovered.avgDays) })}</div>
           <div className="tnum">{t("tooltip.floorplan", { value: f.money(hovered.monthlyFloorplan) })}</div>
           <div className="tnum">{t("tooltip.flows", { in: flows[hs.id].in, out: flows[hs.id].out })}</div>
-          <div className="text-muted mt-1">{t("tooltip.brands", { list: hs.brands.map(brandName).join(", ") })}</div>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1 text-muted">
+            {hs.brands.map((b) => (
+              <span key={b} className="inline-flex items-center gap-1">
+                <BrandDot brand={b} size={8} />
+                {brandName(b)}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+function Donut({ cx, cy, r, width, values, colors }: { cx: number; cy: number; r: number; width: number; values: number[]; colors: string[] }) {
+  const total = values.reduce((a, b) => a + b, 0) || 1;
+  const C = 2 * Math.PI * r;
+  let acc = 0;
+  return (
+    <g transform={`rotate(-90 ${cx} ${cy})`}>
+      {values.map((v, i) => {
+        const len = (v / total) * C;
+        const el = (
+          <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={colors[i]} strokeWidth={width} strokeDasharray={`${Math.max(0, len - 1.2).toFixed(2)} ${(C - Math.max(0, len - 1.2)).toFixed(2)}`} strokeDashoffset={(-acc).toFixed(2)} />
+        );
+        acc += len;
+        return el;
+      })}
+    </g>
+  );
+}
+
+function convexHull(points: [number, number][]): [number, number][] {
+  const p = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o: number[], a: number[], b: number[]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower: [number, number][] = [];
+  for (const q of p) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], q) <= 0) lower.pop();
+    lower.push(q);
+  }
+  const upper: [number, number][] = [];
+  for (const q of [...p].reverse()) {
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], q) <= 0) upper.pop();
+    upper.push(q);
+  }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
 }
 
 function trim(from: { x: number; y: number }, toward: { x: number; y: number }, d: number) {
@@ -201,32 +287,29 @@ function trim(from: { x: number; y: number }, toward: { x: number; y: number }, 
 
 export function MapLegend() {
   const { t } = useApp();
-  const shares = ["<10%", "10-20%", "20-30%", "30%+"];
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[0.8rem] text-muted">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.74rem] text-muted">
+      <span className="flex items-center gap-1.5">
+        <svg width="18" height="18" aria-hidden>
+          <circle cx="9" cy="9" r="6.5" fill="none" stroke={agingRamp[0]} strokeWidth="3.5" strokeDasharray="20 21" transform="rotate(-90 9 9)" />
+          <circle cx="9" cy="9" r="6.5" fill="none" stroke={agingRamp[3]} strokeWidth="3.5" strokeDasharray="10 31" strokeDashoffset="-24" transform="rotate(-90 9 9)" />
+        </svg>
+        {t("overview.legendRingMix")}
+      </span>
+      <span>{t("overview.legendFill")}</span>
       <span>{t("overview.legendSize")}</span>
       <span className="flex items-center gap-1.5">
-        {t("overview.legendRing")}
-        {AGING_COLORS.map((c, i) => (
-          <span key={c} className="flex items-center gap-1 ml-1.5">
-            <span className="inline-block w-3 h-3 rounded-full border-[3px]" style={{ borderColor: c }} />
-            <span className="tnum">{shares[i]}</span>
-          </span>
-        ))}
-      </span>
-      <span className="flex items-center gap-1.5">
-        <svg width="28" height="8">
-          <line x1="1" y1="4" x2="27" y2="4" stroke="#0fa3a3" strokeWidth="2.5" strokeDasharray="6 4" />
+        <svg width="28" height="8" aria-hidden>
+          <line x1="1" y1="4" x2="27" y2="4" stroke={palette.amber} strokeWidth="2.6" strokeDasharray="6 4" />
         </svg>
         {t("overview.legendProposed")}
       </span>
       <span className="flex items-center gap-1.5">
-        <svg width="28" height="8">
-          <line x1="1" y1="4" x2="27" y2="4" stroke="#0a7676" strokeWidth="3" />
+        <svg width="28" height="8" aria-hidden>
+          <line x1="1" y1="4" x2="27" y2="4" stroke={palette.teal} strokeWidth="3" />
         </svg>
         {t("overview.legendApproved")}
       </span>
-      <span>{t("overview.legendWidth")}</span>
     </div>
   );
 }

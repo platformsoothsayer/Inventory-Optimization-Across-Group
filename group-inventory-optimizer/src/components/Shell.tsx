@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { useApp } from "@/state/AppState";
 import { GROUP_NAME } from "@/config";
 import { translate } from "@/i18n";
+import { palette } from "@/theme/tokens";
 
 const NAV = [
   { path: "/", key: "nav.overview" },
@@ -17,9 +18,9 @@ export function Wordmark({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2 select-none" aria-label="Soothsayer Analytics">
       <svg width={compact ? 22 : 26} height={compact ? 22 : 26} viewBox="0 0 26 26" aria-hidden>
-        <circle cx="13" cy="13" r="12" fill="none" stroke="#0fa3a3" strokeWidth="2" />
-        <circle cx="13" cy="13" r="5" fill="#0fa3a3" />
-        <circle cx="13" cy="13" r="2" fill="#0b1f3a" />
+        <circle cx="13" cy="13" r="12" fill="none" stroke={palette.teal} strokeWidth="2" />
+        <circle cx="13" cy="13" r="5" fill={palette.teal} />
+        <circle cx="13" cy="13" r="2" fill={palette.navy} />
       </svg>
       <span className="leading-none">
         <span className="font-semibold tracking-wide text-white text-[0.95rem]">Soothsayer</span>{" "}
@@ -34,7 +35,7 @@ function Header() {
   const pathname = usePathname() || "/";
   const norm = (p: string) => (p.endsWith("/") ? p : p + "/");
   return (
-    <header className="bg-navy text-white shrink-0">
+    <header className="header-gradient text-white shrink-0 shadow-[0_2px_10px_rgb(11_31_58/0.25)] relative z-30">
       <div className="flex items-stretch h-16 px-8 gap-8">
         <div className="flex items-center gap-5 shrink-0">
           <Wordmark />
@@ -52,7 +53,7 @@ function Header() {
                 key={n.path}
                 href={href(n.path)}
                 className={`flex items-center px-4 text-[0.95rem] border-b-[3px] transition-colors whitespace-nowrap ${
-                  active ? "border-teal text-white font-semibold" : "border-transparent text-white/70 hover:text-white"
+                  active ? "border-teal text-white font-semibold" : "border-transparent text-white/75 hover:text-white"
                 }`}
               >
                 {t(n.key)}
@@ -61,12 +62,12 @@ function Header() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          <div className="flex items-center rounded border border-white/25 overflow-hidden text-[0.8rem] font-semibold" role="group" aria-label={t("lang.switch")}>
+          <div className="flex items-center rounded-full bg-white/10 p-[3px] ring-1 ring-white/15 text-[0.8rem] font-semibold" role="group" aria-label={t("lang.switch")}>
             {(["es", "en"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-2.5 py-1 ${lang === l ? "bg-teal text-navy" : "text-white/75 hover:text-white"}`}
+                className={`px-3 py-[3px] rounded-full transition-colors ${lang === l ? "bg-teal text-navy shadow-sm" : "text-white/80 hover:text-white"}`}
                 aria-pressed={lang === l}
               >
                 {t(l === "es" ? "lang.es" : "lang.en")}
@@ -84,7 +85,7 @@ function Header() {
 function Footer() {
   const { t, f, world } = useApp();
   return (
-    <footer className="shrink-0 border-t border-line bg-white px-8 h-8 flex items-center justify-between text-[0.75rem] text-muted">
+    <footer className="shrink-0 border-t border-line bg-surface px-8 h-8 flex items-center justify-between text-[0.75rem] text-muted">
       <span>{t("app.footer")}</span>
       <span className="tnum">{t("app.asOf", { date: f.date(world.today) })}</span>
     </footer>
@@ -109,7 +110,7 @@ export function Shell({ children }: { children: ReactNode }) {
 export function LoadingShell() {
   return (
     <div className="min-h-screen flex flex-col bg-bg">
-      <header className="bg-navy h-16 px-8 flex items-center">
+      <header className="header-gradient h-16 px-8 flex items-center">
         <Wordmark />
       </header>
       <div className="flex-1 flex items-center justify-center text-muted">{translate("es", "app.loading")}</div>
